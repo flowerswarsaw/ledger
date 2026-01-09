@@ -91,3 +91,15 @@ export function getTransactionPerspective(
   }
   return 'neutral';
 }
+
+/**
+ * Converts an account balance to the entity's perspective.
+ *
+ * For internal accounts: balance represents money owned (unchanged).
+ * For external accounts: balance is inverted to show the entity's
+ * relationship - positive means entity received money from this source,
+ * negative means entity spent money at this destination.
+ */
+export function toEntityBalance(balance: number, accountType: AccountType): number {
+  return accountType === 'external' ? -balance : balance;
+}

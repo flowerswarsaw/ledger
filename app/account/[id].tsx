@@ -10,7 +10,7 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { useAccountBalance } from '@/hooks/useBalance';
 import { getAccount } from '@/db/queries';
 import { formatMoney } from '@/utils/money';
-import { getTransactionPerspective } from '@/utils/transaction';
+import { getTransactionPerspective, toEntityBalance } from '@/utils/transaction';
 import type { Account } from '@/types';
 
 export default function AccountDetailScreen() {
@@ -90,8 +90,9 @@ export default function AccountDetailScreen() {
     );
   }
 
-  const balanceColor = balance >= 0 ? positiveColor : negativeColor;
   const isInternal = account.type === 'internal';
+  const displayBalance = toEntityBalance(balance, account.type);
+  const balanceColor = displayBalance >= 0 ? positiveColor : negativeColor;
 
   return (
     <>
@@ -108,7 +109,7 @@ export default function AccountDetailScreen() {
             {isInternal ? 'Balance' : 'Total Activity'}
           </Text>
           <Text style={[styles.balance, { color: balanceColor }]}>
-            {formatMoney(balance, account.currency)}
+            {formatMoney(displayBalance, account.currency)}
           </Text>
           <View style={[styles.badge, { borderColor: secondaryText }]}>
             <Text style={[styles.badgeText, { color: secondaryText }]}>

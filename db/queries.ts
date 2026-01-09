@@ -1,6 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 import { generateId } from '../utils/id';
 import { now } from '../utils/date';
+import { toEntityBalance } from '../utils/transaction';
 import type {
   Account,
   AccountWithBalance,
@@ -204,7 +205,8 @@ export async function getAccountsWithBalances(
   const accountsWithBalances: AccountWithBalance[] = [];
 
   for (const account of accounts) {
-    const balance = await getAccountBalance(db, account.id);
+    const rawBalance = await getAccountBalance(db, account.id);
+    const balance = toEntityBalance(rawBalance, account.type);
     accountsWithBalances.push({ ...account, balance });
   }
 
