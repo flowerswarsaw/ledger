@@ -10,6 +10,7 @@ import { useTransactions } from '@/hooks/useTransactions';
 import { useAccountBalance } from '@/hooks/useBalance';
 import { getAccount } from '@/db/queries';
 import { formatMoney } from '@/utils/money';
+import { getTransactionPerspective } from '@/utils/transaction';
 import type { Account } from '@/types';
 
 export default function AccountDetailScreen() {
@@ -150,12 +151,18 @@ export default function AccountDetailScreen() {
             </Text>
           ) : (
             transactions.map((transaction) => {
+              const fromAcc = accountMap.get(transaction.fromAccountId);
+              const toAcc = accountMap.get(transaction.toAccountId);
               const perspective =
-                transaction.toAccountId === id
-                  ? 'to'
-                  : transaction.fromAccountId === id
-                    ? 'from'
-                    : 'neutral';
+                fromAcc && toAcc && id
+                  ? getTransactionPerspective(
+                      id,
+                      account.type,
+                      transaction.fromAccountId,
+                      fromAcc.type,
+                      toAcc.type
+                    )
+                  : 'neutral';
 
               return (
                 <Link key={transaction.id} href={`/transaction/${transaction.id}`} asChild>

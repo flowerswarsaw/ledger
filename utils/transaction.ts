@@ -54,3 +54,40 @@ export function calculateIncomeAndExpenses(
 
   return { income, expenses };
 }
+
+export type TransactionPerspective = 'from' | 'to' | 'neutral';
+
+/**
+ * Determines the display perspective for a transaction from the entity's viewpoint.
+ *
+ * For internal accounts: based on whether money flows in or out of that account.
+ * For external accounts: based on whether the transaction is income or expense
+ * for the entity (not the external party).
+ */
+export function getTransactionPerspective(
+  currentAccountId: string,
+  currentAccountType: AccountType,
+  fromAccountId: string,
+  fromAccountType: AccountType,
+  toAccountType: AccountType
+): TransactionPerspective {
+  if (currentAccountType === 'internal') {
+    if (toAccountType === 'internal' && fromAccountId !== currentAccountId) {
+      return 'to';
+    }
+    if (fromAccountId === currentAccountId) {
+      return 'from';
+    }
+    return 'to';
+  }
+
+  // External account: show perspective based on entity's income/expense
+  const category = categorizeTransaction(fromAccountType, toAccountType);
+  if (category === 'income') {
+    return 'to'; // Green: entity received money
+  }
+  if (category === 'expense') {
+    return 'from'; // Red: entity spent money
+  }
+  return 'neutral';
+}
