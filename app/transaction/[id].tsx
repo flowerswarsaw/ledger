@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { StyleSheet, ScrollView, RefreshControl, Pressable, Alert } from 'react-native';
-import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { useLocalSearchParams, useRouter, Stack, Link } from 'expo-router';
 
 import { Text, View, useThemeColor } from '@/components/Themed';
 import { useDatabase } from '@/hooks/useDatabase';
@@ -27,7 +27,7 @@ export default function TransactionDetailScreen() {
   const [toAccount, setToAccount] = useState<Account | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
-  const { reverse } = useTransactions();
+  const { reverse, remove } = useTransactions();
 
   const loadTransaction = useCallback(async () => {
     if (!db || !id) return;
@@ -67,6 +67,29 @@ export default function TransactionDetailScreen() {
             if (reversal) {
               Alert.alert('Success', 'Transaction has been reversed');
               router.back();
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Delete Transaction',
+      'This will permanently delete this transaction. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            if (!transaction) return;
+            const success = await remove(transaction.id);
+            if (success) {
+              router.back();
+            } else {
+              Alert.alert('Error', 'Failed to delete transaction');
             }
           },
         },
@@ -139,12 +162,33 @@ export default function TransactionDetailScreen() {
         </View>
 
         <View style={styles.actions}>
+          <Link href={`/transaction/edit/${id}`} asChild>
+            <Pressable style={[styles.actionButton, { backgroundColor: tintColor }]}>
+              <Text style={[styles.actionButtonText, { color: '#fff' }]}>
+                Edit Transaction
+              </Text>
+            </Pressable>
+          </Link>
+        </View>
+
+        <View style={styles.actions}>
           <Pressable
-            style={[styles.actionButton, { borderColor: negativeColor, borderWidth: 1 }]}
+            style={[styles.actionButton, { borderColor: secondaryText, borderWidth: 1 }]}
             onPress={handleReverse}
           >
-            <Text style={[styles.actionButtonText, { color: negativeColor }]}>
+            <Text style={[styles.actionButtonText, { color: secondaryText }]}>
               Reverse Transaction
+            </Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.actions}>
+          <Pressable
+            style={[styles.actionButton, { borderColor: negativeColor, borderWidth: 1 }]}
+            onPress={handleDelete}
+          >
+            <Text style={[styles.actionButtonText, { color: negativeColor }]}>
+              Delete Permanently
             </Text>
           </Pressable>
         </View>

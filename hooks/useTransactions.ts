@@ -6,8 +6,10 @@ import {
   createTransaction,
   getTransaction,
   reverseTransaction,
+  updateTransaction,
+  deleteTransaction,
 } from '../db/queries';
-import type { Transaction, CreateTransactionInput, TransactionFilter } from '../types';
+import type { Transaction, CreateTransactionInput, UpdateTransactionInput, TransactionFilter } from '../types';
 
 export function useTransactions(filter: TransactionFilter = {}) {
   const { db, isReady } = useDatabase();
@@ -66,7 +68,39 @@ export function useTransactions(filter: TransactionFilter = {}) {
     [db, refresh]
   );
 
-  return { transactions, loading, error, refresh, add, reverse };
+  const update = useCallback(
+    async (id: string, input: UpdateTransactionInput): Promise<Transaction | null> => {
+      if (!db) return null;
+      try {
+        const transaction = await updateTransaction(db, id, input);
+        await refresh();
+        return transaction;
+      } catch (e) {
+        setError(e instanceof Error ? e : new Error('Failed to update transaction'));
+        return null;
+      }
+    },
+    [db, refresh]
+  );
+
+  const remove = useCallback(
+    async (id: string): Promise<boolean> => {
+      if (!db) return false;
+      try {
+        const success = await deleteTransaction(db, id);
+        if (success) {
+          await refresh();
+        }
+        return success;
+      } catch (e) {
+        setError(e instanceof Error ? e : new Error('Failed to delete transaction'));
+        return false;
+      }
+    },
+    [db, refresh]
+  );
+
+  return { transactions, loading, error, refresh, add, update, remove, reverse };
 }
 
 export function useRecentTransactions(limit: number = 10) {
