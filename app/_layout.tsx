@@ -71,8 +71,16 @@ function RootLayoutNav() {
           options={{ title: 'Account' }}
         />
         <Stack.Screen
+          name="account/edit/[id]"
+          options={{ presentation: 'modal', title: 'Edit Account' }}
+        />
+        <Stack.Screen
           name="transaction/new"
           options={{ presentation: 'modal', title: 'New Transaction' }}
+        />
+        <Stack.Screen
+          name="transaction/edit/[id]"
+          options={{ presentation: 'modal', title: 'Edit Transaction' }}
         />
         <Stack.Screen
           name="transaction/[id]"

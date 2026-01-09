@@ -7,11 +7,13 @@ import {
   createAccount,
   archiveAccount,
   unarchiveAccount,
+  updateAccount,
 } from '../db/queries';
 import type {
   Account,
   AccountWithBalance,
   CreateAccountInput,
+  UpdateAccountInput,
   AccountType,
 } from '../types';
 
@@ -46,13 +48,18 @@ export function useAccounts(options: { includeArchived?: boolean; type?: Account
 
   const add = useCallback(
     async (input: CreateAccountInput): Promise<Account | null> => {
-      if (!db) return null;
+      if (!db) {
+        setError(new Error('Database not ready'));
+        return null;
+      }
       try {
         const account = await createAccount(db, input);
         await refresh();
         return account;
       } catch (e) {
-        setError(e instanceof Error ? e : new Error('Failed to create account'));
+        const err = e instanceof Error ? e : new Error('Failed to create account');
+        setError(err);
+        console.error('Failed to create account:', e);
         return null;
       }
     },
@@ -85,7 +92,27 @@ export function useAccounts(options: { includeArchived?: boolean; type?: Account
     [db, refresh]
   );
 
-  return { accounts, loading, error, refresh, add, archive, unarchive };
+  const update = useCallback(
+    async (id: string, input: UpdateAccountInput): Promise<Account | null> => {
+      if (!db) {
+        setError(new Error('Database not ready'));
+        return null;
+      }
+      try {
+        const account = await updateAccount(db, id, input);
+        await refresh();
+        return account;
+      } catch (e) {
+        const err = e instanceof Error ? e : new Error('Failed to update account');
+        setError(err);
+        console.error('Failed to update account:', e);
+        return null;
+      }
+    },
+    [db, refresh]
+  );
+
+  return { accounts, loading, error, refresh, add, update, archive, unarchive, isReady };
 }
 
 export function useAccountsWithBalances(includeArchived: boolean = false) {

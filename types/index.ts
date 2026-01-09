@@ -52,3 +52,18 @@ export interface TransactionFilter {
   limit?: number;
   offset?: number;
 }
+
+export interface UpdateAccountInput {
+  name?: string;
+  type?: AccountType;
+  currency?: string;
+}
+
+export interface UpdateTransactionInput {
+  date?: number;
+  fromAccountId?: string;
+  toAccountId?: string;
+  amount?: number;
+  tags?: string[];
+  note?: string | null;
+}

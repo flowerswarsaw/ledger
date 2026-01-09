@@ -117,11 +117,21 @@ export default function AccountDetailScreen() {
         </View>
 
         <View style={styles.actions}>
-          <Link href="/transaction/new" asChild>
+          <Link href={`/account/edit/${id}`} asChild>
             <Pressable style={[styles.actionButton, { backgroundColor: tintColor }]}>
-              <Text style={styles.actionButtonText}>Add Transaction</Text>
+              <Text style={styles.actionButtonText}>Edit Account</Text>
             </Pressable>
           </Link>
+          <Link href="/transaction/new" asChild>
+            <Pressable style={[styles.actionButton, { borderColor, borderWidth: 1 }]}>
+              <Text style={[styles.actionButtonTextOutline, { color: tintColor }]}>
+                Add Transaction
+              </Text>
+            </Pressable>
+          </Link>
+        </View>
+
+        <View style={styles.actions}>
           <Pressable
             style={[styles.actionButton, { borderColor, borderWidth: 1 }]}
             onPress={handleArchive}

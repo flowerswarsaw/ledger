@@ -8,6 +8,8 @@ import type {
   CreateAccountInput,
   CreateTransactionInput,
   TransactionFilter,
+  UpdateAccountInput,
+  UpdateTransactionInput,
 } from '../types';
 
 interface AccountRow {
@@ -130,6 +132,53 @@ export async function unarchiveAccount(
   id: string
 ): Promise<void> {
   await db.runAsync('UPDATE accounts SET archived = 0 WHERE id = ?', id);
+}
+
+export async function updateAccount(
+  db: SQLiteDatabase,
+  id: string,
+  input: UpdateAccountInput
+): Promise<Account | null> {
+  const updates: string[] = [];
+  const params: (string | number)[] = [];
+
+  if (input.name !== undefined) {
+    updates.push('name = ?');
+    params.push(input.name);
+  }
+  if (input.type !== undefined) {
+    updates.push('type = ?');
+    params.push(input.type);
+  }
+  if (input.currency !== undefined) {
+    updates.push('currency = ?');
+    params.push(input.currency);
+  }
+
+  if (updates.length === 0) {
+    return getAccount(db, id);
+  }
+
+  params.push(id);
+  await db.runAsync(
+    `UPDATE accounts SET ${updates.join(', ')} WHERE id = ?`,
+    ...params
+  );
+
+  return getAccount(db, id);
+}
+
+export async function hasTransactions(
+  db: SQLiteDatabase,
+  accountId: string
+): Promise<boolean> {
+  const result = await db.getFirstAsync<{ count: number }>(
+    `SELECT COUNT(*) as count FROM transactions
+     WHERE from_account_id = ? OR to_account_id = ?`,
+    accountId,
+    accountId
+  );
+  return (result?.count ?? 0) > 0;
 }
 
 export async function getAccountBalance(
@@ -289,4 +338,61 @@ export async function reverseTransaction(
     tags: original.tags,
     note: note ?? `Reversal of transaction ${transactionId}`,
   });
+}
+
+export async function updateTransaction(
+  db: SQLiteDatabase,
+  id: string,
+  input: UpdateTransactionInput
+): Promise<Transaction | null> {
+  const updates: string[] = [];
+  const params: (string | number)[] = [];
+
+  if (input.date !== undefined) {
+    updates.push('date = ?');
+    params.push(input.date);
+  }
+  if (input.fromAccountId !== undefined) {
+    updates.push('from_account_id = ?');
+    params.push(input.fromAccountId);
+  }
+  if (input.toAccountId !== undefined) {
+    updates.push('to_account_id = ?');
+    params.push(input.toAccountId);
+  }
+  if (input.amount !== undefined) {
+    updates.push('amount = ?');
+    params.push(input.amount);
+  }
+  if (input.tags !== undefined) {
+    updates.push('tags = ?');
+    params.push(JSON.stringify(input.tags));
+  }
+  if (input.note !== undefined) {
+    updates.push('note = ?');
+    params.push(input.note ?? '');
+  }
+
+  if (updates.length === 0) {
+    return getTransaction(db, id);
+  }
+
+  params.push(id);
+  await db.runAsync(
+    `UPDATE transactions SET ${updates.join(', ')} WHERE id = ?`,
+    ...params
+  );
+
+  return getTransaction(db, id);
+}
+
+export async function deleteTransaction(
+  db: SQLiteDatabase,
+  id: string
+): Promise<boolean> {
+  const result = await db.runAsync(
+    'DELETE FROM transactions WHERE id = ?',
+    id
+  );
+  return result.changes > 0;
 }
