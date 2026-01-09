@@ -8,6 +8,7 @@ import { useNetWorth } from '@/hooks/useBalance';
 import { useRecentTransactions } from '@/hooks/useTransactions';
 import { useAccountsWithBalances } from '@/hooks/useAccounts';
 import { formatMoney } from '@/utils/money';
+import { calculateIncomeAndExpenses } from '@/utils/transaction';
 
 export default function DashboardScreen() {
   const secondaryText = useThemeColor({}, 'secondaryText');
@@ -37,16 +38,10 @@ export default function DashboardScreen() {
   const netWorthColor = netWorth >= 0 ? positiveColor : negativeColor;
 
   const internalAccounts = accounts.filter((a) => a.type === 'internal');
-  const totalIncome = transactions.reduce((sum, t) => {
-    const toAccount = accountMap.get(t.toAccountId);
-    if (toAccount?.type === 'internal') return sum + t.amount;
-    return sum;
-  }, 0);
-  const totalExpenses = transactions.reduce((sum, t) => {
-    const fromAccount = accountMap.get(t.fromAccountId);
-    if (fromAccount?.type === 'internal') return sum + t.amount;
-    return sum;
-  }, 0);
+  const { income: totalIncome, expenses: totalExpenses } = useMemo(
+    () => calculateIncomeAndExpenses(transactions, accountMap),
+    [transactions, accountMap]
+  );
 
   return (
     <ScrollView
